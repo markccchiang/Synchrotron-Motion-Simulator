@@ -30,8 +30,8 @@ p_mass = 1.67262158e-27 # proton mass(kg)
 e_charge = 1.602176565e-19 # an electron charge (Columb)
 C_gamma_e = 8.846e-32 # electron radiation coefficient: 
                       # 8.846e-5[m/(GeV)^3]=8.846e-5[m/(10^9eV)^3]=8.846e-32[m/(eV)^3]
-C_gamma_p = 7.783e-45 # proton radiation coefficient: 
-                      # 7.783e-18[m/(GeV)^3]=7.783e-18[m/(10^9eV)^3]=7.783e-32[m/(eV)^3]
+C_gamma_p = 7.783e-45 # proton radiation coefficient:
+                      # 7.783e-18[m/(GeV)^3]=7.783e-18[m/(10^9eV)^3]=7.783e-45[m/(eV)^3]
 
 #
 # note1: E is the total energy (mc^2 + kinetic energy)
@@ -57,10 +57,10 @@ def V_RF(t):
         return (3*(t/T_nu)**2-2*(t/T_nu)**3)*(V_max-V_min)+V_min
     elif (t<=0):
         return V_min
-    elif (t>=T_nu): 
+    elif (t>=T_nu):
         return V_max
     else:
-        return 't is not a number!'
+        raise ValueError('V_RF: t is not a valid number (got %s)' % t)
 
 def gamma_e(E): 
     return E/(e_mass*c_speed**2)
@@ -72,15 +72,15 @@ def beta2_e(E):
     for_beta2_e = 1-(1/(gamma_e(E)**2))
     if (for_beta2_e >= 0):
         return for_beta2_e
-    else: 
-        return 'beta value is an imaginary number !'
+    else:
+        raise ValueError('beta2_e: beta^2 is negative (E=%s)' % E)
 
 def beta2_p(E):
     for_beta2_p = 1-(1/(gamma_p(E)**2))
     if (for_beta2_p >= 0):
         return for_beta2_p
     else:
-        return 'beta value is an imaginary number !'
+        raise ValueError('beta2_p: beta^2 is negative (E=%s)' % E)
 
 def eta_e(E):
     return alpha_c-(1/(gamma_e(E)**2))
@@ -141,12 +141,8 @@ def phis_p(t, E):
         for_angle_p = (KE_1 - KE_0)/V_RF(t)
     else:
         for_angle_p = 0.0
-    if (-0.9999<for_angle_p<0.9999):
-        return asin(for_angle_p) # (rad)
-    elif (for_angle_p<=-0.9999): 
-        return asin(-0.9999)
-    elif (for_angle_p>=0.9999):
-        return asin(0.9999)
+    for_angle_p = max(-0.9999, min(0.9999, for_angle_p))
+    return asin(for_angle_p) # (rad)
 
 def phis_e(t, E):
     KE_1 = KE(t_e_new(t, E))
@@ -155,12 +151,8 @@ def phis_e(t, E):
         for_angle_e = (KE_1 - KE_0)/V_RF(t)
     else:
         for_angle_e = 0.0
-    if (-0.9999<for_angle_e<0.9999):
-        return asin(for_angle_e) # (rad)
-    elif (for_angle_e<=-0.9999): 
-        return asin(-0.9999)
-    elif (for_angle_e>=0.9999):
-        return asin(0.9999)
+    for_angle_e = max(-0.9999, min(0.9999, for_angle_e))
+    return asin(for_angle_e) # (rad)
 
 def Q_s_p(E, V, t):
     return nu_s_p(E, V)*sqrt(abs(cos(phis_p(t, E))))

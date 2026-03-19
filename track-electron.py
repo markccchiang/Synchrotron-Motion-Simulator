@@ -15,8 +15,8 @@ var_phi = default_var_phi # need to varify in "while" loop
 var_dE = default_var_dE # need to varify in "while" loop
 
 var_t = 0.0 # set initial ramping time = 0 (s)  
-var_E = func.E_total_p(var_t)
-var_beta2 = func.beta2_p(var_E)
+var_E = func.E_total_e(var_t)
+var_beta2 = func.beta2_e(var_E)
 
 show_dPoP = 9999.0*np.ones(num_of_turns)
 show_phi = 9999.0*np.ones(num_of_turns)
