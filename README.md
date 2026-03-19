@@ -88,6 +88,19 @@ python plot-eff-vs-time-electron.py      # Plot efficiency data
 python plot-phase-space-electron.py      # Phase-space snapshot
 ```
 
+## Documentation
+
+Full documentation (theory, optimization results, code reference) is available
+as a Sphinx project under the `docs/` directory. To build it:
+
+```bash
+pip install sphinx
+cd docs
+make html
+```
+
+The generated HTML will be at `docs/_build/html/index.html`.
+
 ## License
 
 ISC License. See [LICENSE.md](LICENSE.md) for details.
