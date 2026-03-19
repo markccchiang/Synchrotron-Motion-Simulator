@@ -47,9 +47,9 @@ while (var_KE<=(func.E_max-0.001)):
     if (var_V <= (func.V_max-0.001)):
         var_turn_reach_V_max += 1
     
-print 'total no. of turns: ', var_turn
-print 'total no. of turns reaching maximunm RF voltage: ', var_turn_reach_V_max
-print 'total ramping time (s): ', var_t
+print('total no. of turns: ', var_turn)
+print('total no. of turns reaching maximunm RF voltage: ', var_turn_reach_V_max)
+print('total ramping time (s): ', var_t)
 
 plt.figure(1)
 plt.xlabel('Time (ms)', fontsize=30)

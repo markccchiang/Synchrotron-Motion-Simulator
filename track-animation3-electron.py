@@ -127,7 +127,7 @@ with writer.saving(fig, "track-animation3-electron.mp4", resolution):
         eff = 100.0*count/num_of_particles
         show_eff[i] = eff
         show_turn[i] = i
-        print 'turn= ', i, ' ; capture rate (%)= ', eff
+        print('turn= ', i, ' ; capture rate (%)= ', eff)
         
         #l.set_data(show_phi, 100.0*show_dPoP)
         #ll.set_data(envelop_phi, 100.0*envelop_dPoP)

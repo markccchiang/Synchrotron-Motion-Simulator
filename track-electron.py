@@ -34,7 +34,7 @@ while (abs(show_phi[num_of_turns-1])>default_var_phi):
     search_step += 1
     var_phi = default_var_phi - Delta_rad*search_step 
     var_dE = 0.0    
-    print 'start phi (Rad)= ', (var_phi + Delta_rad)
+    print('start phi (Rad)= ', (var_phi + Delta_rad))
 
 plt.figure(1)
 ##################################################

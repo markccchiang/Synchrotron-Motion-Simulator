@@ -93,7 +93,7 @@ with writer.saving(fig, "track-animation1-proton.mp4", resolution):
         eff = 100.0*count/num_of_particles
         show_eff[i] = eff
         show_turn[i] = i
-        print 'turn= ', i, ' ; capture rate (%)= ', eff
+        print('turn= ', i, ' ; capture rate (%)= ', eff)
         l.set_data(show_phi, 100.0*show_dPoP)
         #ttl.set_text('$%3.0f$ turns' %(i))
         #ttl2.set_text('Capture rate: $%3.1f$ %%' %(eff))

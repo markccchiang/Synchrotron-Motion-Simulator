@@ -89,7 +89,7 @@ with writer.saving(fig, "track-animation2-electron.mp4", resolution):
 
         eff = 100.0*count/num_of_particles
         time = time_tmp
-        print 'time= ', time, ' ; ref. capture rate (%)= ', eff
+        print('time= ', time, ' ; ref. capture rate (%)= ', eff)
 
         if (i<=1000 and i%5==0):
             l.set_data(show_phi, 100.0*show_dPoP)

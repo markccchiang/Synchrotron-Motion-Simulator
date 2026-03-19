@@ -64,7 +64,7 @@ for i in range(num_of_turns):
     time = time_tmp
     show_eff[i] = eff
     show_turn[i] = i
-    print 'turn= ', i, ' time (ms)= ', 1000*time, ' ; capture rate (%)= ', eff
+    print('turn= ', i, ' time (ms)= ', 1000*time, ' ; capture rate (%)= ', eff)
 
 #
 # define the envelop function

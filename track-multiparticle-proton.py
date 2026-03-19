@@ -62,7 +62,7 @@ for i in range(num_of_turns):
     show_time[i] = time_tmp*1000
     #print 'turn= ', i, ' ; capture rate (%)= ', eff
 
-print para.V_min, ' ', para.T_nu, ' ', para.sigma_dPoP, ' ', eff
+print(para.V_min, ' ', para.T_nu, ' ', para.sigma_dPoP, ' ', eff)
 #np.savetxt('eff-proton.dat', (show_turn, show_eff), fmt='%3.2f')
 np.savetxt('eff-proton.dat', (show_time, show_eff), fmt='%3.4f')
 

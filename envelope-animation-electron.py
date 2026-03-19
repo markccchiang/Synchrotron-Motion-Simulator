@@ -83,7 +83,7 @@ with writer.saving(fig, "envelope-animation-electron.mp4", resolution):
     for i in range(num_of_intervals+1):
         set_t = set_start_t + (set_final_t/(num_of_intervals))*i
         show_phi, show_dPoP = run(set_t)
-        print 'ramping time (s)= ', set_t
+        print('ramping time (s)= ', set_t)
         l.set_data(show_phi, 100.0*show_dPoP)
         #ttl.set_text('$%3.4f$ s' %(set_t))
         ax.set_title('$%3.1f$ ms' %(set_t*1000), fontsize=30)
