@@ -1,2 +1,6 @@
 CLAUDE.md
 docs/_build/
+.idea/
+.venv/
+__pycache__/
+*.pyc
