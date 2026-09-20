@@ -117,9 +117,19 @@ Revolution Period Functions
 Phase Factor Functions
 ^^^^^^^^^^^^^^^^^^^^^^
 
+``U0_e(E)`` / ``U0_p(E)``
+   Energy radiated per turn by the synchronous particle, in joules:
+   :math:`U_0 = e\,C_\gamma E^4 / \rho`. Because :math:`C_\gamma` is quoted
+   in m/eV\ :sup:`3`, *E* is converted to eV inside these functions; the result
+   is returned in joules to match :math:`\Delta E`.
+
 ``phis_e(t, E)`` / ``phis_p(t, E)``
-   RF phase factor:
-   :math:`\phi_s = \sin^{-1}\left[(K(t_{n+1}) - K(t_n)) / (eV)\right]`.
+   Synchronous phase. The synchronous particle must supply both the ramp energy
+   gain and the energy it radiates each turn:
+
+   .. math::
+
+      \phi_s = \sin^{-1}\left[\frac{K(t_{n+1}) - K(t_n) + U_0/e}{V}\right]
 
 Tracking Iteration Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -132,8 +142,14 @@ Tracking Iteration Functions
    .. math::
 
       \Delta E_{n+1} &= \Delta E_n + eV(\sin\phi_n - \sin\phi_s)
-                        - C_\gamma \frac{E^4}{\rho} \\
+                        - \left[U_0(E + \Delta E_n) - U_0(E)\right] \\
       \phi_{n+1} &= \phi_n + \frac{2\pi h \eta}{\beta^2 E} \Delta E_{n+1}
+
+   The synchronous particle's own radiation loss is already balanced by
+   :math:`\phi_s`, so what acts on the deviation is the *excess* this particle
+   radiates over the synchronous one. That difference vanishes at
+   :math:`\Delta E = 0` and, to first order, equals
+   :math:`4 U_0 \Delta E / E` — the usual radiation damping term.
 
 Input Module
 ------------

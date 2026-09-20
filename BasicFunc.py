@@ -134,13 +134,26 @@ def t_e_old(t, E):
     else:
         return 0
 
+def U0_p(E):
+    # Energy radiated per turn by a proton of total energy E, in joules.
+    # C_gamma_p is quoted in m/eV^3, so the energy has to be expressed in eV
+    # here; E is carried in joules everywhere else.
+    return e_charge*C_gamma_p*((E/e_charge)**4)/rho
+
+def U0_e(E):
+    # Energy radiated per turn by an electron of total energy E, in joules.
+    return e_charge*C_gamma_e*((E/e_charge)**4)/rho
+
 def phis_p(t, E):
     KE_1 = KE(t_p_new(t, E))
     KE_0 = KE(t)
     if (KE_1>KE_0):
-        for_angle_p = (KE_1 - KE_0)/V_RF(t)
+        gain = KE_1 - KE_0
     else:
-        for_angle_p = 0.0
+        gain = 0.0
+    # the synchronous particle must supply the ramp gain AND the energy it
+    # radiates each turn; U0 is in joules, gain and V_RF are in eV/volts
+    for_angle_p = (gain + U0_p(E)/e_charge)/V_RF(t)
     for_angle_p = max(-0.9999, min(0.9999, for_angle_p))
     return asin(for_angle_p) # (rad)
 
@@ -148,9 +161,12 @@ def phis_e(t, E):
     KE_1 = KE(t_e_new(t, E))
     KE_0 = KE(t)
     if (KE_1>KE_0):
-        for_angle_e = (KE_1 - KE_0)/V_RF(t)
+        gain = KE_1 - KE_0
     else:
-        for_angle_e = 0.0
+        gain = 0.0
+    # the synchronous particle must supply the ramp gain AND the energy it
+    # radiates each turn; U0 is in joules, gain and V_RF are in eV/volts
+    for_angle_e = (gain + U0_e(E)/e_charge)/V_RF(t)
     for_angle_e = max(-0.9999, min(0.9999, for_angle_e))
     return asin(for_angle_e) # (rad)
 
@@ -183,13 +199,18 @@ def area_e(E, V, t):
     return area_e_comp1*area_e_comp2
 
 def iteration_p(delta_E, phi, t, E):
-    E_radiation = C_gamma_p*(E**4)/rho
+    # phis_p already balances the synchronous particle's own radiation loss, so
+    # what acts on the deviation is the excess this particle radiates over the
+    # synchronous one. That difference is what damps the oscillation.
+    E_radiation = U0_p(E + delta_E) - U0_p(E)
     delta_E_new = delta_E + e_charge*V_RF(t)*(sin(phi)-sin(phis_p(t, E)))-E_radiation
     phi_new = phi + 2*PI*h*eta_p(E)*delta_E_new/beta2_p(E)/E
     return delta_E_new, phi_new
 
 def iteration_e(delta_E, phi, t, E):
-    E_radiation = C_gamma_e*(E**4)/rho
+    # see iteration_p: the synchronous loss is carried by phis_e, so only the
+    # excess over it acts on the deviation
+    E_radiation = U0_e(E + delta_E) - U0_e(E)
     delta_E_new = delta_E + e_charge*V_RF(t)*(sin(phi)-sin(phis_e(t, E)))-E_radiation
     phi_new = phi + 2*PI*h*eta_e(E)*delta_E_new/beta2_e(E)/E
     return delta_E_new, phi_new
