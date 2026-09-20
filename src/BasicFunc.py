@@ -279,3 +279,114 @@ def envelope_e(t, num_of_turns, Delta_rad=ENVELOPE_DELTA_RAD):
     # Trace the bucket boundary at ramping time t. Returns (phi, Delta_E/E).
     return _envelope(t, num_of_turns, Delta_rad, ENVELOPE_PHI_E,
                      E_total_e, iteration_e, 1.0)
+
+#
+# vectorised bunch tracking
+#
+# The scalar iteration_* functions above stay the reference implementation and
+# are what every batch script uses. These are elementwise twins for the cases
+# that track a whole bunch at once -- the interactive UI, mainly.
+#
+# They are exact, not approximate: V_RF(t), phis_*(t, E), eta_*, beta2_* and
+# U0_* all depend only on the per-turn scalars (t, E), which every particle
+# shares, so the only array quantities are delta_E and phi. Swapping math.sin
+# for numpy.sin over the same operation order reproduces the scalar map
+# bit-for-bit, and the test in Verifying a change asserts exactly that.
+#
+
+def iteration_p_vec(delta_E, phi, t, E):
+    # elementwise twin of iteration_p; delta_E and phi are arrays
+    E_radiation = U0_p(E + delta_E) - U0_p(E)
+    delta_E_new = delta_E + e_charge*V_RF(t)*(np.sin(phi)-sin(phis_p(t, E)))-E_radiation
+    phi_new = phi + 2*PI*h*eta_p(E)*delta_E_new/beta2_p(E)/E
+    return delta_E_new, phi_new
+
+def iteration_e_vec(delta_E, phi, t, E):
+    # elementwise twin of iteration_e; delta_E and phi are arrays
+    E_radiation = U0_e(E + delta_E) - U0_e(E)
+    delta_E_new = delta_E + e_charge*V_RF(t)*(np.sin(phi)-sin(phis_e(t, E)))-E_radiation
+    phi_new = phi + 2*PI*h*eta_e(E)*delta_E_new/beta2_e(E)/E
+    return delta_E_new, phi_new
+
+# Seeds are the ones the batch scripts use, so a UI run reproduces them exactly.
+BUNCH_SEED_DE = 12345
+BUNCH_SEED_PHI = 34567
+
+def bunch_init_p(num_of_particles, sigma_dPoP, mean_dPoP,
+                 seed_dE=BUNCH_SEED_DE, seed_phi=BUNCH_SEED_PHI):
+    # Gaussian in Delta_P/P, flat in phi over [-pi, +pi] -- the proton bucket is
+    # centred on zero, unlike the electron one. The proton spread is specified as
+    # Delta_P/P, hence the extra beta^2. See track-multiparticle-proton.py.
+    E = E_total_p(0.0)
+    np.random.seed(seed_dE)
+    delta_E = mean_dPoP + sigma_dPoP*np.random.randn(num_of_particles)*E*beta2_p(E)
+    np.random.seed(seed_phi)
+    phi = np.pi*2.0*np.random.random(num_of_particles)-np.pi
+    return delta_E, phi
+
+def bunch_init_e(num_of_particles, sigma_dPoP, mean_dPoP,
+                 seed_dE=BUNCH_SEED_DE, seed_phi=BUNCH_SEED_PHI):
+    # Gaussian in Delta_E/E, flat in phi over [0, 2*pi]
+    E = E_total_e(0.0)
+    np.random.seed(seed_dE)
+    delta_E = mean_dPoP + sigma_dPoP*np.random.randn(num_of_particles)*E
+    np.random.seed(seed_phi)
+    phi = np.pi*2.0*np.random.random(num_of_particles)
+    return delta_E, phi
+
+def track_turns_p(delta_E, phi, t, E, num_of_turns):
+    # Advance the bunch by num_of_turns. Returns the state as the batch scripts
+    # would record it at that turn index, i.e. before the next kick.
+    for _ in range(num_of_turns):
+        delta_E, phi = iteration_p_vec(delta_E, phi, t, E)
+        t = t_p_new(t, E)
+        E = E_total_p(t)
+    return delta_E, phi, t, E
+
+def track_turns_e(delta_E, phi, t, E, num_of_turns):
+    for _ in range(num_of_turns):
+        delta_E, phi = iteration_e_vec(delta_E, phi, t, E)
+        t = t_e_new(t, E)
+        E = E_total_e(t)
+    return delta_E, phi, t, E
+
+def capture_rate(dPoP, phi, range_dPoP, range_phi1, range_phi2):
+    # Percentage of the bunch inside the survival window. dPoP is Delta_E/E for
+    # electrons and Delta_P/P for protons -- the caller applies the beta^2.
+    inside = ((phi >= range_phi1) & (phi <= range_phi2)
+              & (np.abs(dPoP) <= range_dPoP))
+    return 100.0*np.count_nonzero(inside)/len(dPoP)
+
+#
+# runtime configuration
+#
+# BasicFunc snapshots Input at import time, but its functions look these names
+# up at call time, so assigning to them takes effect immediately -- that is what
+# lets the UI vary parameters without rewriting Input.py or reloading anything.
+#
+# Note f is the ramping frequency here, which collides with the conventional
+# `import BasicFunc as f` alias. Inside this module f is always the frequency.
+#
+CONFIG_NAMES = ('E_min', 'E_max', 'f', 'L', 'alpha_c', 'rho',
+                'V_min', 'V_max', 'T_nu', 'h')
+
+def snapshot():
+    # Current value of every configuration name, for display or restore.
+    return {name: globals()[name] for name in CONFIG_NAMES}
+
+def override(**kwargs):
+    # Set configuration values for subsequent calls. Returns the previous values
+    # so a caller can restore them.
+    #
+    # Every name is validated before anything is assigned: a partial apply
+    # followed by a raise would leave a mutated global behind with no way for
+    # the caller to know what to restore.
+    unknown = [name for name in kwargs if name not in CONFIG_NAMES]
+    if unknown:
+        raise KeyError('override: %s is not a configuration name; expected one of %s'
+                       % (', '.join(repr(n) for n in sorted(unknown)),
+                          ', '.join(CONFIG_NAMES)))
+    previous = {name: globals()[name] for name in kwargs}
+    for name, value in kwargs.items():
+        globals()[name] = float(value)
+    return previous

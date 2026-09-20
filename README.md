@@ -68,6 +68,7 @@ working directory. Output files are written to the current directory.
 | `examples/track-multiparticle-{proton,electron}.py` | Multi-particle tracking with capture efficiency output |
 | `examples/plot-eff-vs-time-{proton,electron}.py` | Plot capture efficiency vs. time |
 | `examples/plot-phase-space-{proton,electron}.py` | Plot phase-space snapshots |
+| `examples/ui.py`, `examples/ui.html` | Interactive capture-optimisation UI |
 | `src/Input.py.example-proton` | Example input parameters for proton simulation |
 | `src/Input.py.example-electron` | Example input parameters for electron simulation |
 
@@ -122,6 +123,23 @@ activation; if you activated the environment instead (see [Setup](#setup)), plai
 .venv/bin/python examples/plot-eff-vs-time-electron.py     # Plot efficiency data
 .venv/bin/python examples/plot-phase-space-electron.py     # Phase-space snapshot
 ```
+
+## Interactive UI
+
+For exploring capture efficiency, `examples/ui.py` serves a browser UI on localhost:
+
+```bash
+.venv/bin/python examples/ui.py          # opens a tab at http://127.0.0.1:8000
+.venv/bin/python examples/ui.py --species proton --port 8080 --no-browser
+```
+
+Drag the RF voltages, capture time, harmonic number or bunch spread and the phase-space
+plot and capture rate update live. The species defaults to whichever one `src/Input.py`
+is configured for.
+
+All physics runs in `BasicFunc` on the Python side — the page only draws — so the UI and
+the batch scripts cannot drift apart. It uses the vectorised `iteration_*_vec` map, which
+reproduces the scalar map bit-for-bit while running ~60x faster.
 
 ## Documentation
 

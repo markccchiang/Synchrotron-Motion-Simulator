@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synchrotron Capture</title>
+<style>
+  :root {
+    --bg: #f6f7f9;   --panel: #ffffff; --ink: #1e293b;  --muted: #64748b;
+    --line: #dfe3e8; --accent: #0ea5e9; --bunch: #fbbf24; --sep: #38bdf8;
+    --good: #16a34a; --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f172a; --panel: #1e293b; --ink: #e2e8f0; --muted: #94a3b8;
+      --line: #334155; --good: #4ade80; --bad: #f87171;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  header { padding: 20px 16px 8px; }
+  h1 { margin: 0; font-size: 19px; letter-spacing: .2px; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  main {
+    display: grid; grid-template-columns: 300px minmax(0, 1fr);
+    gap: 16px; padding: 12px 16px 24px; align-items: start;
+  }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px;
+  }
+  .ctl { margin-bottom: 13px; }
+  .ctl label {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 12px; color: var(--muted); margin-bottom: 3px;
+  }
+  .ctl label b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+  canvas { width: 100%; height: auto; display: block; border-radius: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; margin-top: 12px; }
+  .stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .stat span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .stat b { font-size: 17px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .capture b { color: var(--good); }
+  .row { display: flex; gap: 8px; margin-top: 4px; }
+  button {
+    flex: 1; padding: 7px 10px; border-radius: 7px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  #err {
+    display: none; margin-top: 10px; padding: 9px 11px; border-radius: 7px;
+    background: color-mix(in srgb, var(--bad) 12%, transparent);
+    color: var(--bad); font-size: 12.5px;
+  }
+  #busy { color: var(--muted); font-size: 12px; min-height: 18px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Synchrotron capture optimisation</h1>
+  <p>Tune the RF ramp and watch the bunch fill the bucket. Physics runs in <code>BasicFunc</code>; this page only draws.</p>
+</header>
+
+<main>
+  <div class="card" id="panel">
+    <div class="ctl">
+      <label>Initial RF voltage <i>V<sub>i</sub></i> <b><span id="v_min_v"></span> kV</b></label>
+      <input type="range" id="V_min" min="1000" max="30000" step="100">
+    </div>
+    <div class="ctl">
+      <label>Final RF voltage <i>V<sub>f</sub></i> <b><span id="v_max_v"></span> kV</b></label>
+      <input type="range" id="V_max" min="1000" max="30000" step="100">
+    </div>
+    <div class="ctl">
+      <label>Capture time <i>T<sub>&nu;</sub></i> <b><span id="t_nu_v"></span> ms</b></label>
+      <input type="range" id="T_nu" min="0.01" max="2" step="0.01">
+    </div>
+    <div class="ctl">
+      <label>Harmonic number <i>h</i> <b><span id="h_v"></span></b></label>
+      <input type="range" id="h" min="1" max="8" step="1">
+    </div>
+    <div class="ctl">
+      <label>Bunch spread <i>&sigma;</i> <b><span id="sigma_v"></span> %</b></label>
+      <input type="range" id="sigma_dPoP" min="0.01" max="0.5" step="0.01">
+    </div>
+    <div class="ctl">
+      <label>Particles <b><span id="np_v"></span></b></label>
+      <input type="range" id="num_of_particles" min="200" max="4000" step="100">
+    </div>
+    <div class="ctl">
+      <label>Turns tracked <b><span id="turns_v"></span></b></label>
+      <input type="range" id="num_of_turns" min="0" max="6000" step="50">
+    </div>
+    <div class="row">
+      <button id="reset">Reset to Input.py</button>
+      <button id="play">Play</button>
+    </div>
+    <div id="busy"></div>
+    <div id="err"></div>
+  </div>
+
+  <div class="card">
+    <canvas id="plot" width="1000" height="620"></canvas>
+    <div class="stats">
+      <div class="stat capture"><span>Capture</span><b id="s_cap">—</b></div>
+      <div class="stat"><span>Bucket area</span><b id="s_area">—</b></div>
+      <div class="stat"><span>&phi;<sub>s</sub></span><b id="s_phis">—</b></div>
+      <div class="stat"><span>Q<sub>s</sub></span><b id="s_qs">—</b></div>
+      <div class="stat"><span>V<sub>RF</sub></span><b id="s_v">—</b></div>
+      <div class="stat"><span>Kinetic E</span><b id="s_ke">—</b></div>
+      <div class="stat"><span>Ramp time</span><b id="s_t">—</b></div>
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const cv = $("plot"), cx = cv.getContext("2d");
+let D = null, playing = false, playTimer = null, inFlight = false, queued = false;
+
+const CONTROLS = ["V_min", "V_max", "T_nu", "h", "sigma_dPoP", "num_of_particles", "num_of_turns"];
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function readout() {
+  $("v_min_v").textContent = (+$("V_min").value / 1000).toFixed(1);
+  $("v_max_v").textContent = (+$("V_max").value / 1000).toFixed(1);
+  $("t_nu_v").textContent  = (+$("T_nu").value).toFixed(2);
+  $("h_v").textContent     = $("h").value;
+  $("sigma_v").textContent = (+$("sigma_dPoP").value).toFixed(2);
+  $("np_v").textContent    = $("num_of_particles").value;
+  $("turns_v").textContent = $("num_of_turns").value;
+}
+
+function request(sepTurns) {
+  return {
+    species: D.species,
+    config: Object.assign({}, D.config, {
+      V_min: +$("V_min").value,
+      V_max: +$("V_max").value,
+      T_nu:  +$("T_nu").value / 1000.0,   // ms -> s
+      h:     +$("h").value,
+    }),
+    bunch: {
+      num_of_particles: +$("num_of_particles").value,
+      sigma_dPoP: +$("sigma_dPoP").value / 100.0,  // % -> fraction
+      mean_dPoP: D.bunch.mean_dPoP,
+      num_of_turns: +$("num_of_turns").value,
+    },
+    window: D.window,
+    separatrix_turns: sepTurns,
+  };
+}
+
+async function run(sepTurns) {
+  if (inFlight) { queued = true; return; }
+  inFlight = true;
+  $("busy").textContent = "computing…";
+  try {
+    const r = await fetch("/api/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request(sepTurns || 1000)),
+    });
+    const out = await r.json();
+    if (out.error) { showError(out.error); }
+    else { hideError(); draw(out); stats(out); }
+  } catch (e) {
+    showError(String(e));
+  } finally {
+    inFlight = false;
+    $("busy").textContent = "";
+    if (queued) { queued = false; run(sepTurns); }
+  }
+}
+
+function showError(msg) { const e = $("err"); e.style.display = "block"; e.textContent = msg; }
+function hideError() { $("err").style.display = "none"; }
+
+function stats(o) {
+  $("s_cap").textContent  = o.capture.toFixed(1) + "%";
+  $("s_cap").style.color  = o.capture >= 90 ? css("--good") : (o.capture >= 50 ? "" : css("--bad"));
+  $("s_area").textContent = o.area.toPrecision(3);
+  $("s_phis").textContent = o.phis_deg.toFixed(2) + "°";
+  $("s_qs").textContent   = o.Qs.toPrecision(3);
+  $("s_v").textContent    = (o.V_RF / 1000).toFixed(2) + " kV";
+  $("s_ke").textContent   = o.KE_MeV.toFixed(1) + " MeV";
+  $("s_t").textContent    = o.time_ms.toFixed(3) + " ms";
+}
+
+function draw(o) {
+  const W = cv.width, H = cv.height, PAD = { l: 66, r: 16, t: 16, b: 46 };
+  const [x0, x1] = D.limits.xlim, [y0, y1] = D.limits.ylim;
+  const px = (v) => PAD.l + (v - x0) / (x1 - x0) * (W - PAD.l - PAD.r);
+  const py = (v) => H - PAD.b - (v - y0) / (y1 - y0) * (H - PAD.t - PAD.b);
+
+  cx.clearRect(0, 0, W, H);
+  cx.fillStyle = css("--panel"); cx.fillRect(0, 0, W, H);
+
+  // survival window
+  const wy = D.window.range_dPoP * 100;
+  cx.fillStyle = css("--accent") + "14";
+  cx.fillRect(px(D.window.range_phi1), py(wy),
+              px(D.window.range_phi2) - px(D.window.range_phi1), py(-wy) - py(wy));
+
+  // grid + axes
+  cx.strokeStyle = css("--line"); cx.fillStyle = css("--muted");
+  cx.lineWidth = 1; cx.font = "12px ui-monospace, SFMono-Regular, Menlo, monospace";
+  cx.textAlign = "right"; cx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) {
+    const v = y0 + (y1 - y0) * i / 4;
+    cx.beginPath(); cx.moveTo(PAD.l, py(v)); cx.lineTo(W - PAD.r, py(v)); cx.stroke();
+    cx.fillText(v.toFixed(1), PAD.l - 8, py(v));
+  }
+  cx.textAlign = "center"; cx.textBaseline = "top";
+  for (let i = 0; i <= 6; i++) {
+    const v = x0 + (x1 - x0) * i / 6;
+    cx.beginPath(); cx.moveTo(px(v), PAD.t); cx.lineTo(px(v), H - PAD.b); cx.stroke();
+    cx.fillText(v.toFixed(2), px(v), H - PAD.b + 8);
+  }
+  cx.fillText("φ (rad)", (PAD.l + W - PAD.r) / 2, H - 18);
+  cx.save(); cx.translate(16, (PAD.t + H - PAD.b) / 2); cx.rotate(-Math.PI / 2);
+  cx.textBaseline = "top"; cx.fillText(D.axis.replace(/&Delta;/g, "Δ") + " (%)", 0, 0); cx.restore();
+
+  // separatrix
+  cx.strokeStyle = css("--sep"); cx.lineWidth = 2; cx.beginPath();
+  for (let i = 0; i < o.separatrix.phi.length; i++) {
+    const X = px(o.separatrix.phi[i]), Y = py(o.separatrix.dPoP[i]);
+    i ? cx.lineTo(X, Y) : cx.moveTo(X, Y);
+  }
+  cx.stroke();
+
+  // bunch
+  cx.fillStyle = css("--bunch");
+  for (let i = 0; i < o.phi.length; i++) {
+    const X = px(o.phi[i]), Y = py(o.dPoP[i]);
+    if (X >= PAD.l && X <= W - PAD.r && Y >= PAD.t && Y <= H - PAD.b) {
+      cx.fillRect(X - 1.4, Y - 1.4, 2.8, 2.8);
+    }
+  }
+}
+
+let debounce = null;
+function onInput() {
+  readout();
+  clearTimeout(debounce);
+  debounce = setTimeout(() => run(1000), 110); // coarse separatrix while dragging
+}
+function onCommit() { run(3000); }             // finer one when the slider is released
+
+function togglePlay() {
+  playing = !playing;
+  $("play").textContent = playing ? "Pause" : "Play";
+  if (!playing) { clearInterval(playTimer); return; }
+  playTimer = setInterval(() => {
+    const el = $("num_of_turns");
+    const next = +el.value + 50;
+    if (next > +el.max) { togglePlay(); return; }
+    el.value = next; readout(); run(1000);
+  }, 260);
+}
+
+async function boot() {
+  D = await (await fetch("/api/defaults")).json();
+  $("V_min").value = D.config.V_min;
+  $("V_max").value = D.config.V_max;
+  $("T_nu").value  = D.config.T_nu * 1000;
+  $("h").value     = D.config.h;
+  $("sigma_dPoP").value = D.bunch.sigma_dPoP * 100;
+  $("num_of_particles").value = D.bunch.num_of_particles;
+  $("num_of_turns").value = D.bunch.num_of_turns;
+  document.title = "Synchrotron Capture — " + D.species;
+  readout();
+  CONTROLS.forEach((id) => {
+    $(id).addEventListener("input", onInput);
+    $(id).addEventListener("change", onCommit);
+  });
+  $("play").addEventListener("click", togglePlay);
+  $("reset").addEventListener("click", () => { boot(); });
+  run(3000);
+}
+boot();
+</script>
+</body>
+</html>

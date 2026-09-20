@@ -204,3 +204,22 @@ Application 7: Phase-Space Snapshot
 
 Plots a phase-space snapshot at a specific turn in the ramping cycle. Configure
 with ``app7_num_of_turns`` in ``src/Input.py``.
+
+
+Interactive UI
+--------------
+
+``examples/ui.py`` serves a browser UI for exploring capture efficiency:
+
+.. code-block:: bash
+
+   .venv/bin/python examples/ui.py
+   .venv/bin/python examples/ui.py --species proton --port 8080 --no-browser
+
+Dragging the RF voltages, capture time, harmonic number or bunch spread updates the
+phase-space plot and the capture rate live. The species defaults to whichever one
+``src/Input.py`` is configured for.
+
+All physics runs in ``BasicFunc``; the page only draws. The UI uses the vectorised
+``iteration_e_vec`` / ``iteration_p_vec`` map, which reproduces the scalar map
+bit-for-bit at roughly sixty times the speed.
