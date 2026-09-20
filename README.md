@@ -15,6 +15,7 @@ This tool simulates the longitudinal motion of charged particles in a synchrotro
 - Single-particle tracking through the ramping cycle
 - Multi-particle tracking with capture efficiency calculation
 - Animated visualizations of phase-space evolution (exported as `.mp4`)
+- An interactive browser UI for tuning the RF ramp against capture efficiency
 
 The physics and mathematical formulations are documented in [`notes/MarkCCChiang-note.pdf`](notes/MarkCCChiang-note.pdf).
 
@@ -27,8 +28,8 @@ The physics and mathematical formulations are documented in [`notes/MarkCCChiang
 
 ## Setup
 
-This is a flat collection of scripts with no package metadata, so a plain virtual
-environment is all that is needed. Using [uv](https://docs.astral.sh/uv/):
+There is no package metadata, so a plain virtual environment is all that is
+needed. Using [uv](https://docs.astral.sh/uv/):
 
 ```bash
 uv venv --python 3.12             # creates .venv/
@@ -76,7 +77,7 @@ working directory. Output files are written to the current directory.
 
 ### 1. Configure input parameters
 
-Copy one of the example configuration files to `Input.py`:
+Copy one of the example configuration files to `src/Input.py`:
 
 ```bash
 # For proton simulation

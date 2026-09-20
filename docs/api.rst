@@ -151,6 +151,86 @@ Tracking Iteration Functions
    :math:`\Delta E = 0` and, to first order, equals
    :math:`4 U_0 \Delta E / E` — the usual radiation damping term.
 
+Separatrix Search
+^^^^^^^^^^^^^^^^^
+
+``envelope_e(t, num_of_turns, Delta_rad=ENVELOPE_DELTA_RAD)`` / ``envelope_p(...)``
+   Trace the RF bucket boundary at ramping time *t*, returning
+   ``(phi, Delta_E/E)`` for electrons and ``(phi, Delta_P/P)`` for protons.
+
+   The search steps the starting phase inward from ``ENVELOPE_PHI_E``
+   (:math:`2\pi`) or ``ENVELOPE_PHI_P`` (:math:`\pi`) in steps of *Delta_rad*
+   until the trajectory stays bounded. Those starting values set both the
+   launch point and the escape threshold, so changing them moves every
+   published envelope.
+
+   The search is capped at one full RF period, :math:`\lfloor 2\pi /
+   \Delta_{rad} \rfloor`, and raises ``RuntimeError`` if no starting phase
+   yields a bounded trajectory — beyond that sweep there is nothing left to
+   find, and without the cap the loop would spin forever.
+
+``ENVELOPE_DELTA_RAD``
+   Phase step of the search, 0.01 rad. Against 0.001 this costs 0.076 % in
+   bucket height for a ten times cheaper search.
+
+Vectorised Bunch Tracking
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The scalar functions above are the reference implementation and are what the
+batch scripts use. These are elementwise twins for tracking a whole bunch at
+once, used by the interactive UI.
+
+They are exact rather than approximate: :math:`V_{RF}(t)`, :math:`\phi_s`,
+:math:`\eta`, :math:`\beta^2` and :math:`U_0` depend only on the per-turn
+scalars *(t, E)* that every particle shares, so :math:`\Delta E` and
+:math:`\phi` are the only array quantities. Substituting ``numpy.sin`` for
+``math.sin`` over the same operation order reproduces the scalar map
+bit-for-bit, at roughly sixty times the speed.
+
+``iteration_e_vec(delta_E, phi, t, E)`` / ``iteration_p_vec(...)``
+   Elementwise twin of ``iteration_e`` / ``iteration_p``; *delta_E* and *phi*
+   are arrays.
+
+``bunch_init_e(num_of_particles, sigma_dPoP, mean_dPoP, ...)`` / ``bunch_init_p(...)``
+   Initial bunch: Gaussian in :math:`\Delta E/E` (electrons) or
+   :math:`\Delta P/P` (protons, carrying the extra :math:`\beta^2`), flat in
+   phase over :math:`[0, 2\pi]` for electrons and :math:`[-\pi, +\pi]` for
+   protons. Seeded with the same values the batch scripts use, so results match
+   them exactly.
+
+``track_turns_e(delta_E, phi, t, E, num_of_turns)`` / ``track_turns_p(...)``
+   Advance the bunch, returning ``(delta_E, phi, t, E)`` as the batch scripts
+   would record it at that turn index — that is, before the next kick.
+
+``capture_rate(dPoP, phi, range_dPoP, range_phi1, range_phi2)``
+   Percentage of the bunch inside the survival window. *dPoP* is
+   :math:`\Delta E/E` for electrons and :math:`\Delta P/P` for protons; the
+   caller applies the :math:`\beta^2`.
+
+Runtime Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+``BasicFunc`` snapshots ``Input`` at import time, but its functions look those
+names up at call time, so assigning to them takes effect immediately. This is
+what lets the UI vary parameters without rewriting ``src/Input.py`` or
+reloading the module.
+
+``CONFIG_NAMES``
+   The names that may be overridden: ``E_min``, ``E_max``, ``f``, ``L``,
+   ``alpha_c``, ``rho``, ``V_min``, ``V_max``, ``T_nu``, ``h``.
+
+   Note that ``f`` is the ramping frequency here, which collides with the
+   conventional ``import BasicFunc as f`` alias.
+
+``snapshot()``
+   Current value of every configuration name, for display or restore.
+
+``override(**kwargs)``
+   Set configuration values for subsequent calls, returning the previous ones
+   so the caller can restore them. Every name is validated before anything is
+   assigned: a partial apply followed by a raise would leave a mutated global
+   behind with no way for the caller to know what to restore.
+
 Input Module
 ------------
 
