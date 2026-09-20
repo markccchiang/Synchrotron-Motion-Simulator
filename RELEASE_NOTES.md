@@ -114,7 +114,6 @@ capture. Animation frame counts and durations are unchanged (501 / 25.05 s,
 - **The radiation term is quartic in `ΔE`.** For a particle far outside the
   bucket it can overflow; this needs an absurd configuration (|ΔE| ~ 10⁷⁷ eV
   against a realistic peak of 0.07·E) and fails loudly rather than silently.
-- Nothing in the repository is git-tagged yet.
 
 ---
 
