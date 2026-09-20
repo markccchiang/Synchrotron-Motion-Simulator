@@ -25,6 +25,14 @@ import Input as para
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Static files served beside the page. An explicit allowlist rather than
+# joining the request path onto a directory, so there is no way to walk out of
+# it. The logo is the same file the README uses; serving it keeps one copy.
+STATIC = {
+    '/assets/logo.svg': (os.path.join(HERE, os.pardir, 'assets', 'logo.svg'),
+                         'image/svg+xml'),
+}
+
 # Per-species wiring. The only real differences are which _p/_e functions to
 # call and whether the vertical coordinate carries the beta^2 that turns
 # Delta_E/E into Delta_P/P -- the same split the batch scripts have.
@@ -171,6 +179,10 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ('/', '/index.html'):
             with open(os.path.join(HERE, 'ui.html'), 'rb') as fh:
                 self._send(200, fh.read(), 'text/html; charset=utf-8')
+        elif self.path in STATIC:
+            path, ctype = STATIC[self.path]
+            with open(path, 'rb') as fh:
+                self._send(200, fh.read(), ctype)
         elif urlparse(self.path).path == '/api/defaults':
             asked = parse_qs(urlparse(self.path).query).get('species', [None])[0]
             if asked is not None and asked not in SPECIES:
