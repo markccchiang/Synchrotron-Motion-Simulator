@@ -9,6 +9,24 @@ Requirements
 - **Matplotlib** >= 1.2
 - **FFmpeg** (for generating animation videos)
 
+Environment Setup
+-----------------
+
+The project is a flat collection of scripts with no package metadata, so a plain
+virtual environment is all that is needed. Using `uv <https://docs.astral.sh/uv/>`_:
+
+.. code-block:: bash
+
+   uv venv --python 3.12
+   uv pip install numpy matplotlib
+
+Then either activate the environment with ``source .venv/bin/activate``, or call
+the interpreter directly with its full path, as shown below.
+
+FFmpeg is not a Python package and must be installed separately (``brew install
+ffmpeg`` on macOS, ``apt install ffmpeg`` on Debian/Ubuntu). It is only required
+by the ``*-animation-*.py`` scripts.
+
 Configuration
 -------------
 
@@ -109,7 +127,7 @@ Application 0: Plot Ramping Parameters
 
 .. code-block:: bash
 
-   python plot-{particle}.py
+   .venv/bin/python plot-{particle}.py
 
 Plots the kinetic energy, RF voltage, and other ramping parameters over a
 full cycle. Also reports the total number of turns and total ramping time.
@@ -119,7 +137,7 @@ Application 1: Phase-Space Envelope
 
 .. code-block:: bash
 
-   python envelope-{particle}.py
+   .venv/bin/python envelope-{particle}.py
 
 Computes the phase-space envelope (separatrix) at a specified time point.
 Configure with ``app1_set_t`` and ``app1_num_of_turns`` in ``Input.py``.
@@ -129,7 +147,7 @@ Application 2: Envelope Animation
 
 .. code-block:: bash
 
-   python envelope-animation-{particle}.py
+   .venv/bin/python envelope-animation-{particle}.py
 
 Produces an animated video (``envelope-animation-{particle}.mp4``) showing the
 evolution of the phase-space envelope over the ramping cycle. Configure with
@@ -140,7 +158,7 @@ Application 3: Single-Particle Tracking
 
 .. code-block:: bash
 
-   python track-{particle}.py
+   .venv/bin/python track-{particle}.py
 
 Tracks a single particle through the phase space for a complete ramping cycle.
 Configure with ``app3_num_of_turns`` in ``Input.py``.
@@ -150,9 +168,9 @@ Application 4: Multi-Particle Tracking Animations
 
 .. code-block:: bash
 
-   python track-animation1-{particle}.py   # phase-space animation
-   python track-animation2-{particle}.py   # time-domain animation
-   python track-animation3-{particle}.py   # animation with envelope overlay
+   .venv/bin/python track-animation1-{particle}.py   # phase-space animation
+   .venv/bin/python track-animation2-{particle}.py   # time-domain animation
+   .venv/bin/python track-animation3-{particle}.py   # animation with envelope overlay
 
 Tracks a bunch of particles and produces animated videos (``*.mp4``). Configure
 with ``app4_num_of_turns`` in ``Input.py``.
@@ -162,7 +180,7 @@ Application 5: Capture Efficiency Calculation
 
 .. code-block:: bash
 
-   python track-multiparticle-{particle}.py
+   .venv/bin/python track-multiparticle-{particle}.py
 
 Tracks a bunch of particles and outputs the capture efficiency data to
 ``eff-{particle}.dat``. Configure with ``app5_num_of_turns`` in ``Input.py``.
@@ -172,7 +190,7 @@ Application 6: Efficiency vs. Time Plot
 
 .. code-block:: bash
 
-   python plot-eff-vs-time-{particle}.py
+   .venv/bin/python plot-eff-vs-time-{particle}.py
 
 Reads the data file ``eff-{particle}.dat`` produced by Application 5 and plots
 the capture efficiency as a function of time.
@@ -182,7 +200,7 @@ Application 7: Phase-Space Snapshot
 
 .. code-block:: bash
 
-   python plot-phase-space-{particle}.py
+   .venv/bin/python plot-phase-space-{particle}.py
 
 Plots a phase-space snapshot at a specific turn in the ramping cycle. Configure
 with ``app7_num_of_turns`` in ``Input.py``.
