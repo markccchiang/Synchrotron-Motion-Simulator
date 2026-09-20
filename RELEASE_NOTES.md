@@ -1,6 +1,6 @@
 # Release Notes
 
-## v0.1 (unreleased)
+## v0.1
 
 A correctness release. **Synchrotron radiation was silently absent from every
 electron run before this version** — if you have electron results from v0.0, they
