@@ -1,5 +1,126 @@
 # Release Notes
 
+## v0.2
+
+An interactive release. The question `docs/optimization.rst` poses — which
+`(V_i, T_nu)` maximises adiabatic capture? — previously meant editing
+`src/Input.py`, running a script and reading one number off stdout. It is now a
+browser UI where dragging a slider redraws the bunch and updates the capture
+rate.
+
+### Interactive UI
+
+`examples/ui.py` serves a page on localhost:
+
+```bash
+.venv/bin/python examples/ui.py
+```
+
+Sliders for the RF voltages, capture time, harmonic number, bunch spread,
+particle count and turns tracked. The phase-space plot shows the bunch against
+the separatrix and the survival window, with capture rate, bucket area, φs, Qs,
+V_RF, kinetic energy and ramp time read out below. An Electron/Proton toggle
+switches species, bringing its own survival window, plot limits and phase
+convention.
+
+**The physics is not reimplemented in JavaScript.** The server computes and the
+page only draws, so the UI and the batch scripts cannot drift apart. The
+radiation-units bug fixed in v0.1 survived years in *one* copy of the physics;
+two copies is how that recurs.
+
+A full-fidelity request — 2000 particles, 2000 turns, plus the separatrix —
+answers in under 0.2 s (about 0.17 s once warm), which is what makes dragging
+feel live. While a slider is moving the separatrix is traced at 1000 turns and
+refined to 3000 on release.
+
+### Vectorised tracking
+
+`BasicFunc` gains an array path beside the scalar one. `iteration_e_vec` /
+`iteration_p_vec` are elementwise twins of the scalar map, and they are **exact,
+not approximate**: `V_RF(t)`, `phis_*`, `eta_*`, `beta2_*` and `U0_*` all depend
+only on the per-turn scalars `(t, E)` that every particle shares, so `delta_E`
+and `phi` are the only array quantities.
+
+| | scalar | vectorised |
+|---|---|---|
+| 2000 particles × 2000 turns | 8.02 s | **0.13 s** (62×) |
+
+`np.array_equal` is true on both `delta_E` and `phi` — zero difference, not
+"close". This works only because v0.1 hoisted the machine clock out of the
+particle loop; the two changes compound.
+
+Also added: `bunch_init_*` and `track_turns_*`, reproducing the initialisation
+and seeding the batch scripts use so UI numbers match them exactly;
+`capture_rate`, the survival test those scripts inline; and `override()` /
+`snapshot()` for runtime configuration. `BasicFunc` looks its config up at call
+time, so assignment takes effect immediately — no reload, no rewriting
+`Input.py` on disk.
+
+### Fixes
+
+Every one of these was found by verifying the UI against the batch scripts
+rather than by inspection.
+
+- **`bunch_init_p` used the electron phase convention.** Protons are initialised
+  flat over `[-π, +π]`, electrons over `[0, 2π]`. Using the electron range for
+  protons reported 51.75% capture against the correct 99.0%.
+- **`--species` could contradict `src/Input.py`.** Input.py only ever holds one
+  species' survival window and plot limits uncommented, so `--species proton`
+  against an electron config judged a proton bunch on `[-π, π]` against a window
+  of `[0, 2π]` and called half of it lost before a single turn. The mismatched
+  species now reads its parameters from the matching example file and says so at
+  startup.
+- **`override()` applied partially before raising**, leaving a mutated global
+  with no way for the caller to know what to restore. It now validates every
+  name before assigning any.
+- **A malformed request returned HTTP 500** with a traceback in the log; it now
+  returns 400 with the reason.
+- **`Reset` re-attached every event listener**, so each reset doubled the
+  handlers and a slider move fired one request per accumulated listener.
+
+### Documentation
+
+- `docs/api.rst` was missing eleven public functions — `envelope_p`/`envelope_e`,
+  undocumented since v0.1 collapsed the four copies of the separatrix search,
+  plus the nine added here. All 45 are now covered.
+- A screenshot of the running UI in the README and the Sphinx usage page, and
+  the project logo in the UI header — served from `assets/logo.svg` rather than
+  inlined, so there is one copy.
+- Two stale README claims fixed: it still described "a flat collection of
+  scripts", contradicting the `src/` + `examples/` layout described twenty lines
+  below, and pointed at `Input.py` where the commands said `src/Input.py`.
+
+### Project structure
+
+`TLS-booster-figure/` and `TLS-booster-video/` moved under `notes/`, beside the
+derivation PDF whose figures they are.
+
+### Verification
+
+`eff-electron.dat` and `eff-proton.dat` are byte-identical to v0.1 — the scalar
+path is untouched. The UI reports 99.9% and 99.0%, matching both batch scripts,
+across all four startup paths (species from `Input.py` or `--species`, for each
+species).
+
+### Known limitations
+
+- **The scalar functions remain the reference implementation.** The batch
+  scripts still loop per particle; only the UI uses the array path.
+- **`src/Input.py` is tracked in git** and must be overwritten to switch species
+  for the batch scripts, so selecting a beam dirties the working tree. The UI
+  switches species without touching it.
+- **An alternate config cannot be supplied via `PYTHONPATH`.** `_srcpath` inserts
+  `src/` at the front of `sys.path`, so `src/Input.py` always wins. To run a
+  variant, copy the `src/` tree and edit the copy.
+- **The radiation term is quartic in `ΔE`.** For a particle far outside the
+  bucket it can overflow; this needs an absurd configuration (|ΔE| ~ 10⁷⁷ eV
+  against a realistic peak of 0.07·E) and fails loudly rather than silently.
+- The UI server is single-threaded by design, since the configuration it
+  overrides is module-level state. It is a local exploration tool, not a
+  multi-user service.
+
+---
+
 ## v0.1
 
 A correctness release. **Synchrotron radiation was silently absent from every
@@ -104,7 +225,9 @@ capture. Animation frame counts and durations are unchanged (501 / 25.05 s,
 ### Known limitations
 
 - **The physics functions are scalar.** `BasicFunc` uses `math`, not NumPy
-  ufuncs, so multi-particle scripts still loop per particle.
+  ufuncs, so multi-particle scripts still loop per particle. *(Partly addressed
+  in v0.2: an exact vectorised path was added alongside, 62× faster, though the
+  batch scripts still use the scalar one.)*
 - **`src/Input.py` is tracked in git** and must be overwritten to switch species,
   so selecting a beam dirties the working tree. It currently holds the electron
   values.
