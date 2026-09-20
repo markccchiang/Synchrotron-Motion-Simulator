@@ -16,7 +16,7 @@ This tool simulates the longitudinal motion of charged particles in a synchrotro
 - Multi-particle tracking with capture efficiency calculation
 - Animated visualizations of phase-space evolution (exported as `.mp4`)
 
-The physics and mathematical formulations are documented in [`Documentation/MarkCCChiang-note.pdf`](Documentation/MarkCCChiang-note.pdf).
+The physics and mathematical formulations are documented in [`notes/MarkCCChiang-note.pdf`](notes/MarkCCChiang-note.pdf).
 
 ## Requirements
 

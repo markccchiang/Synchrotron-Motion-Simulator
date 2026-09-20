@@ -31,7 +31,7 @@ work reproducible by someone other than its author.
 ### Documentation
 
 - **Sphinx documentation** under `docs/`, transcribing the theory, the derivations and
-  the optimization study from `Documentation/MarkCCChiang-note.pdf` into
+  the optimization study from `notes/MarkCCChiang-note.pdf` into
   `introduction`, `theory`, `optimization`, `usage`, `api` and `references` pages.
 - **Rewritten README** with a project-structure table and per-script usage.
 - **Environment setup documented** for [uv](https://docs.astral.sh/uv/), in both the
