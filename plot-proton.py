@@ -71,7 +71,7 @@ plt.savefig('proton_V_RF.eps', format='eps', dpi=1000, bbox_inches='tight')
 
 plt.figure(3)
 plt.xlabel('Time (ms)', fontsize=30)
-plt.ylabel('$\phi_s$ (degree)', fontsize=30)
+plt.ylabel(r'$\phi_s$ (degree)', fontsize=30)
 plt.xticks(fontsize=25)
 plt.yticks(fontsize=25)
 plt.plot(show_t[:var_turn]*1.0e+3, show_phis[:var_turn]*180.0/3.1415926, 'b-', markeredgecolor = 'none', linewidth=4)

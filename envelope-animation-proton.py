@@ -64,8 +64,8 @@ ax = plt.axes()
 plt.xlim(para.set_xlim1, para.set_xlim2)
 plt.ylim(para.set_ylim1, para.set_ylim2)
 ##################################################
-plt.xlabel('$\phi$ (rad)', fontsize=20)
-plt.ylabel('$\Delta P / P $ (%)', fontsize=20)
+plt.xlabel(r'$\phi$ (rad)', fontsize=20)
+plt.ylabel(r'$\Delta P / P $ (%)', fontsize=20)
 
 #
 # animation settings
