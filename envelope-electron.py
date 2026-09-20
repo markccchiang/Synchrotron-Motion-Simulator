@@ -10,37 +10,7 @@ var_t = para.app1_set_t # (s) set the ramping time point to get the envelope
 num_of_turns = para.app1_num_of_turns # set the number of turns for tracking
 ############################################################################
 
-default_var_phi = 3.14*2 # set the initial phi 
-default_var_dE = 0.0 # set the initial Delta_E
-Delta_rad = 0.01 # rad = 3.14*2 - (Delta_rad)*search_step
-# the bucket spans at most one RF period, so a search that sweeps
-# more than 2*pi has nothing left to find
-max_search_steps = int(2*pi/Delta_rad)
-
-var_E = func.E_total_e(var_t)
-var_beta2 = func.beta2_e(var_E)
-
-var_dE = default_var_dE # need to varify in "while" loo
-var_phi = default_var_phi # need to varify in "while" loop
-
-show_dPoP = 9999.0*np.ones(num_of_turns)
-show_phi = 9999.0*np.ones(num_of_turns)
-search_step = 0 # start to search from 3.1415 to minus direction 
-
-while (abs(show_phi[num_of_turns-1])>default_var_phi):
-    if (search_step > max_search_steps):
-        raise RuntimeError(
-            'envelope search did not converge at t=%s s: no starting phase '
-            'within 2*pi of %s rad stays inside the bucket. Check the RF '
-            'settings (V_min, V_max, h) in Input.py.' % (var_t, default_var_phi))
-    for i in range(num_of_turns):
-        var_dE, var_phi = func.iteration_e(var_dE, var_phi, var_t, var_E)
-        show_phi[i] = var_phi
-        show_dPoP[i] = var_dE/var_E
-    search_step += 1
-    var_phi = default_var_phi - Delta_rad*search_step 
-    var_dE = default_var_dE
-    print('start phi (Rad)= ', (var_phi + Delta_rad))
+show_phi, show_dPoP = func.envelope_e(var_t, num_of_turns)
 
 plt.figure(1)
 ##################################################

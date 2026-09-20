@@ -215,3 +215,55 @@ def iteration_e(delta_E, phi, t, E):
     phi_new = phi + 2*PI*h*eta_e(E)*delta_E_new/beta2_e(E)/E
     return delta_E_new, phi_new
 
+
+#
+# separatrix (RF bucket) search
+#
+# The four scripts that draw an envelope used to carry their own copy of this
+# loop, disagreeing on both the phase step (0.01 vs 0.001) and the turn count
+# (para.app2_num_of_turns vs a hardcoded 3000), so "the envelope at time t" was
+# a different curve depending on which script drew it. One definition now.
+#
+ENVELOPE_DELTA_RAD = 0.01 # phase step of the search (rad)
+
+# Starting phase of the search. These are the historical literals, deliberately
+# kept rather than tightened to pi / 2*pi: they set both the launch point and
+# the escape threshold, so changing them would move every published envelope.
+ENVELOPE_PHI_P = 3.14    # the proton bucket sits in [-pi, pi]
+ENVELOPE_PHI_E = 3.14*2  # the electron bucket sits in [0, 2*pi]
+
+def _envelope(t, num_of_turns, Delta_rad, default_var_phi, E_total, iteration, scale):
+    E = E_total(t)
+    show_dPoP = 9999.0*np.ones(num_of_turns)
+    show_phi = 9999.0*np.ones(num_of_turns)
+    var_dE = 0.0
+    var_phi = default_var_phi
+    search_step = 0
+    # the bucket spans at most one RF period, so a search that sweeps more than
+    # 2*pi has nothing left to find
+    max_search_steps = int(2*PI/Delta_rad)
+
+    while (abs(show_phi[num_of_turns-1])>default_var_phi):
+        if (search_step > max_search_steps):
+            raise RuntimeError(
+                'envelope search did not converge at t=%s s: no starting phase '
+                'within 2*pi of %s rad stays inside the bucket. Check the RF '
+                'settings (V_min, V_max, h) in Input.py.' % (t, default_var_phi))
+        for i in range(num_of_turns):
+            var_dE, var_phi = iteration(var_dE, var_phi, t, E)
+            show_phi[i] = var_phi
+            show_dPoP[i] = var_dE/E/scale
+        search_step += 1
+        var_phi = default_var_phi - Delta_rad*search_step
+        var_dE = 0.0
+    return show_phi, show_dPoP
+
+def envelope_p(t, num_of_turns, Delta_rad=ENVELOPE_DELTA_RAD):
+    # Trace the bucket boundary at ramping time t. Returns (phi, Delta_P/P).
+    return _envelope(t, num_of_turns, Delta_rad, ENVELOPE_PHI_P,
+                     E_total_p, iteration_p, beta2_p(E_total_p(t)))
+
+def envelope_e(t, num_of_turns, Delta_rad=ENVELOPE_DELTA_RAD):
+    # Trace the bucket boundary at ramping time t. Returns (phi, Delta_E/E).
+    return _envelope(t, num_of_turns, Delta_rad, ENVELOPE_PHI_E,
+                     E_total_e, iteration_e, 1.0)
