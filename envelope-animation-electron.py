@@ -27,8 +27,16 @@ def run(set_t):
     show_phi = 9999.0*np.ones(num_of_turns)
     search_step = 0 # start fo search from 3.1415 to minus direction 
     Delta_rad = 0.001 # rad = 3.14*2 - Delta_rad*search_step
+    # the bucket spans at most one RF period, so a search that sweeps
+    # more than 2*pi has nothing left to find
+    max_search_steps = int(2*pi/Delta_rad)
 
     while (abs(show_phi[num_of_turns-1])>default_var_phi):
+        if (search_step > max_search_steps):
+            raise RuntimeError(
+                'envelope search did not converge at t=%s s: no starting phase '
+                'within 2*pi of %s rad stays inside the bucket. Check the RF '
+                'settings (V_min, V_max, h) in Input.py.' % (var_t, default_var_phi))
         for i in range(num_of_turns):
             var_dE, var_phi = func.iteration_e(var_dE, var_phi, var_t, var_E)
             show_phi[i] = var_phi
