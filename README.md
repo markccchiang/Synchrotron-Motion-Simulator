@@ -70,6 +70,7 @@ working directory. Output files are written to the current directory.
 | `examples/plot-eff-vs-time-{proton,electron}.py` | Plot capture efficiency vs. time |
 | `examples/plot-phase-space-{proton,electron}.py` | Plot phase-space snapshots |
 | `examples/ui.py`, `examples/ui.html` | Interactive capture-optimisation UI |
+| `assets/` | Logo and the UI screenshot used in this README |
 | `src/Input.py.example-proton` | Example input parameters for proton simulation |
 | `src/Input.py.example-electron` | Example input parameters for electron simulation |
 
@@ -126,6 +127,11 @@ activation; if you activated the environment instead (see [Setup](#setup)), plai
 ```
 
 ## Interactive UI
+
+<p align="center">
+  <img src="assets/ui-screenshot.png" width="820"
+       alt="The capture-optimisation UI: parameter sliders on the left, the bunch filamented inside the RF bucket in phase space, and capture rate and bucket statistics below.">
+</p>
 
 For exploring capture efficiency, `examples/ui.py` serves a browser UI on localhost:
 

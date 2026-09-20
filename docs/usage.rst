@@ -211,6 +211,14 @@ Interactive UI
 
 ``examples/ui.py`` serves a browser UI for exploring capture efficiency:
 
+.. image:: ../assets/ui-screenshot.png
+   :alt: The capture-optimisation UI: parameter sliders on the left, the bunch
+         filamented inside the RF bucket in phase space, and capture rate and
+         bucket statistics below.
+   :align: center
+   :width: 100%
+
+
 .. code-block:: bash
 
    .venv/bin/python examples/ui.py
