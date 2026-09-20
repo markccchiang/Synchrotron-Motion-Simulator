@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
+import _srcpath # noqa: F401 - puts ../src on sys.path
 import BasicFunc as func
 import Input as para
 

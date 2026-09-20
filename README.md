@@ -42,7 +42,7 @@ source .venv/bin/activate         # Windows: .venv\Scripts\activate
 ```
 
 or skip activation and call the interpreter directly, e.g.
-`.venv/bin/python track-electron.py`.
+`.venv/bin/python examples/track-electron.py`.
 
 FFmpeg is not a Python package and must be installed separately — `brew install
 ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu. It is only required by the
@@ -50,20 +50,26 @@ ffmpeg` on macOS, `apt install ffmpeg` on Debian/Ubuntu. It is only required by 
 
 ## Project Structure
 
+The physics module and its configuration live in `src/`; the runnable
+scripts live in `examples/`. Each script imports `_srcpath` first, which puts
+`src/` on `sys.path`, so a bare `python examples/<script>.py` works from any
+working directory. Output files are written to the current directory.
+
 | File | Description |
 |------|-------------|
-| `Input.py` | User-configurable parameters (beam energy, RF settings, etc.) |
-| `BasicFunc.py` | Core physics functions (energy, RF, tracking iterations) |
-| `plot-{proton,electron}.py` | Plot ramping parameters (energy, voltage, frequency, etc.) |
-| `envelope-{proton,electron}.py` | Compute the phase-space envelope at a given time |
-| `envelope-animation-{proton,electron}.py` | Animate the envelope over the ramping cycle |
-| `track-{proton,electron}.py` | Single-particle phase-space tracking |
-| `track-animation{1,2,3}-{proton,electron}.py` | Animated multi-particle tracking |
-| `track-multiparticle-{proton,electron}.py` | Multi-particle tracking with capture efficiency output |
-| `plot-eff-vs-time-{proton,electron}.py` | Plot capture efficiency vs. time |
-| `plot-phase-space-{proton,electron}.py` | Plot phase-space snapshots |
-| `Input.py.example-proton` | Example input parameters for proton simulation |
-| `Input.py.example-electron` | Example input parameters for electron simulation |
+| `examples/_srcpath.py` | Puts `src/` on `sys.path` for the scripts |
+| `src/Input.py` | User-configurable parameters (beam energy, RF settings, etc.) |
+| `src/BasicFunc.py` | Core physics functions (energy, RF, tracking iterations) |
+| `examples/plot-{proton,electron}.py` | Plot ramping parameters (energy, voltage, frequency, etc.) |
+| `examples/envelope-{proton,electron}.py` | Compute the phase-space envelope at a given time |
+| `examples/envelope-animation-{proton,electron}.py` | Animate the envelope over the ramping cycle |
+| `examples/track-{proton,electron}.py` | Single-particle phase-space tracking |
+| `examples/track-animation{1,2,3}-{proton,electron}.py` | Animated multi-particle tracking |
+| `examples/track-multiparticle-{proton,electron}.py` | Multi-particle tracking with capture efficiency output |
+| `examples/plot-eff-vs-time-{proton,electron}.py` | Plot capture efficiency vs. time |
+| `examples/plot-phase-space-{proton,electron}.py` | Plot phase-space snapshots |
+| `src/Input.py.example-proton` | Example input parameters for proton simulation |
+| `src/Input.py.example-electron` | Example input parameters for electron simulation |
 
 ## Usage
 
@@ -73,13 +79,13 @@ Copy one of the example configuration files to `Input.py`:
 
 ```bash
 # For proton simulation
-cp Input.py.example-proton Input.py
+cp src/Input.py.example-proton src/Input.py
 
 # For electron simulation
-cp Input.py.example-electron Input.py
+cp src/Input.py.example-electron src/Input.py
 ```
 
-Edit `Input.py` to adjust beam energy, RF voltage, harmonic number, and other parameters as needed.
+Edit `src/Input.py` to adjust beam energy, RF voltage, harmonic number, and other parameters as needed.
 
 ### 2. Run the simulation scripts
 
@@ -90,31 +96,31 @@ activation; if you activated the environment instead (see [Setup](#setup)), plai
 **Proton simulation:**
 
 ```bash
-.venv/bin/python plot-proton.py                 # Plot ramping parameters
-.venv/bin/python envelope-proton.py             # Phase-space envelope
-.venv/bin/python envelope-animation-proton.py   # Envelope animation  -> envelope-animation-proton.mp4
-.venv/bin/python track-proton.py                # Single-particle tracking
-.venv/bin/python track-animation1-proton.py     # Tracking animation 1 -> track-animation1-proton.mp4
-.venv/bin/python track-animation2-proton.py     # Tracking animation 2 -> track-animation2-proton.mp4
-.venv/bin/python track-animation3-proton.py     # Tracking animation 3 -> track-animation3-proton.mp4
-.venv/bin/python track-multiparticle-proton.py  # Multi-particle stats  -> eff-proton.dat
-.venv/bin/python plot-eff-vs-time-proton.py     # Plot efficiency data
-.venv/bin/python plot-phase-space-proton.py     # Phase-space snapshot
+.venv/bin/python examples/plot-proton.py                 # Plot ramping parameters
+.venv/bin/python examples/envelope-proton.py             # Phase-space envelope
+.venv/bin/python examples/envelope-animation-proton.py   # Envelope animation  -> envelope-animation-proton.mp4
+.venv/bin/python examples/track-proton.py                # Single-particle tracking
+.venv/bin/python examples/track-animation1-proton.py     # Tracking animation 1 -> track-animation1-proton.mp4
+.venv/bin/python examples/track-animation2-proton.py     # Tracking animation 2 -> track-animation2-proton.mp4
+.venv/bin/python examples/track-animation3-proton.py     # Tracking animation 3 -> track-animation3-proton.mp4
+.venv/bin/python examples/track-multiparticle-proton.py  # Multi-particle stats  -> eff-proton.dat
+.venv/bin/python examples/plot-eff-vs-time-proton.py     # Plot efficiency data
+.venv/bin/python examples/plot-phase-space-proton.py     # Phase-space snapshot
 ```
 
 **Electron simulation:**
 
 ```bash
-.venv/bin/python plot-electron.py                 # Plot ramping parameters
-.venv/bin/python envelope-electron.py             # Phase-space envelope
-.venv/bin/python envelope-animation-electron.py   # Envelope animation  -> envelope-animation-electron.mp4
-.venv/bin/python track-electron.py                # Single-particle tracking
-.venv/bin/python track-animation1-electron.py     # Tracking animation 1 -> track-animation1-electron.mp4
-.venv/bin/python track-animation2-electron.py     # Tracking animation 2 -> track-animation2-electron.mp4
-.venv/bin/python track-animation3-electron.py     # Tracking animation 3 -> track-animation3-electron.mp4
-.venv/bin/python track-multiparticle-electron.py  # Multi-particle stats  -> eff-electron.dat
-.venv/bin/python plot-eff-vs-time-electron.py     # Plot efficiency data
-.venv/bin/python plot-phase-space-electron.py     # Phase-space snapshot
+.venv/bin/python examples/plot-electron.py                 # Plot ramping parameters
+.venv/bin/python examples/envelope-electron.py             # Phase-space envelope
+.venv/bin/python examples/envelope-animation-electron.py   # Envelope animation  -> envelope-animation-electron.mp4
+.venv/bin/python examples/track-electron.py                # Single-particle tracking
+.venv/bin/python examples/track-animation1-electron.py     # Tracking animation 1 -> track-animation1-electron.mp4
+.venv/bin/python examples/track-animation2-electron.py     # Tracking animation 2 -> track-animation2-electron.mp4
+.venv/bin/python examples/track-animation3-electron.py     # Tracking animation 3 -> track-animation3-electron.mp4
+.venv/bin/python examples/track-multiparticle-electron.py  # Multi-particle stats  -> eff-electron.dat
+.venv/bin/python examples/plot-eff-vs-time-electron.py     # Plot efficiency data
+.venv/bin/python examples/plot-phase-space-electron.py     # Phase-space snapshot
 ```
 
 ## Documentation

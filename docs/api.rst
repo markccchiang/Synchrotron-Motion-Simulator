@@ -6,8 +6,8 @@ This section documents the core modules of the synchrotron motion simulator.
 BasicFunc Module
 ----------------
 
-``BasicFunc.py`` contains all physics functions used by the simulation scripts.
-It reads parameters from ``Input.py`` and defines the following:
+``src/BasicFunc.py`` contains all physics functions used by the simulation scripts.
+It reads parameters from ``src/Input.py`` and defines the following:
 
 Physical Constants
 ^^^^^^^^^^^^^^^^^^
@@ -154,7 +154,7 @@ Tracking Iteration Functions
 Input Module
 ------------
 
-``Input.py`` is a plain Python file that serves as the configuration for all
+``src/Input.py`` is a plain Python file that serves as the configuration for all
 simulation scripts. It contains no functions; all parameters are defined as
 module-level variables. See the :doc:`usage` section for a complete description
 of each parameter.

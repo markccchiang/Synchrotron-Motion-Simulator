@@ -2,6 +2,7 @@
 from math import *
 import numpy as np
 import matplotlib.pyplot as plt
+import _srcpath # noqa: F401 - puts ../src on sys.path
 import Input as para
 
 #data = np.loadtxt("eff-proton.dat")

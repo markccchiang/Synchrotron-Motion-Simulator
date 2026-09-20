@@ -4,3 +4,9 @@ docs/_build/
 .venv/
 __pycache__/
 *.pyc
+
+# simulation output written to the working directory (root only;
+# the committed reference sets under TLS-booster-*/ stay tracked)
+/*.eps
+/*.mp4
+/*.dat

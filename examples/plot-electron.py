@@ -2,6 +2,7 @@
 from math import *
 import numpy as np
 import matplotlib.pyplot as plt
+import _srcpath # noqa: F401 - puts ../src on sys.path
 import BasicFunc as func
 
 var_turn = 0 # initial number of turn = 0 turn

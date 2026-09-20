@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
+import _srcpath # noqa: F401 - puts ../src on sys.path
 import BasicFunc as func
 import Input as para
 
@@ -47,7 +48,6 @@ writer = FFMpegWriter(fps=25, metadata=metadata)
 #
 fig = plt.figure()
 l, = plt.plot([], [], 'ro', markeredgecolor = 'none')
-ll, = plt.plot([], [], 'k-', markeredgecolor = 'none', linewidth=2)
 
 plt.xlim(para.set_xlim1, para.set_xlim2)
 plt.ylim(para.set_ylim1, para.set_ylim2)
@@ -58,19 +58,12 @@ plt.ylabel(r'$\Delta E / E $ (%)', fontsize=20)
 # set text position
 #
 ax = plt.axes()
-#ttl = ax.text(0.4, 1.05, '', transform = ax.transAxes, va='center', fontsize=30)
-#ttl2 = ax.text(0.15, 0.9, '', transform = ax.transAxes, va='center', fontsize=30)
 
-#
-# define the envelop functions
-#
 #
 # make the animation
 #
-show_eff = 9999.0*np.ones(num_of_turns)
-show_turn = 9999*np.ones(num_of_turns)
 resolution = 100
-with writer.saving(fig, "track-animation3-electron.mp4", resolution):
+with writer.saving(fig, "track-animation2-electron.mp4", resolution):
     for i in range(num_of_turns):
         count = 0
         eff = 0.0
@@ -83,7 +76,6 @@ with writer.saving(fig, "track-animation3-electron.mp4", resolution):
             var_dE[j], var_phi[j] = func.iteration_e(var_dE[j], var_phi[j], var_t, var_E)
 
             if (range_phi1<=show_phi[j]<=range_phi2 and abs(show_dPoP[j])<=range_dPoP):
-            #if (abs(show_dPoP[j])<=range_dPoP):
                 count +=1
 
         # t, E and beta^2 are the same for every particle, so advance them once
@@ -91,36 +83,20 @@ with writer.saving(fig, "track-animation3-electron.mp4", resolution):
         time_tmp = var_t
         var_E = func.E_total_e(var_t)
 
-        time = time_tmp
-        envelop_phi, envelop_dPoP = func.envelope_e(time, para.app2_num_of_turns)
         eff = 100.0*count/num_of_particles
-        show_eff[i] = eff
-        show_turn[i] = i
-        print('turn= ', i, ' ; capture rate (%)= ', eff)
-        
-        #l.set_data(show_phi, 100.0*show_dPoP)
-        #ll.set_data(envelop_phi, 100.0*envelop_dPoP)
-        #ttl.set_text('$%3.0f$ turns' %(i))
-        #ttl2.set_text('Capture rate: $%3.1f$ %%' %(eff))
-        #ax.set_title('$%3.0f$ turns; capture rate: $%3.1f$%%' %(i, eff), fontsize=28)
-        #writer.grab_frame()
+        time = time_tmp
+        print('time= ', time, ' ; ref. capture rate (%)= ', eff)
 
         if (i<=1000 and i%5==0):
             l.set_data(show_phi, 100.0*show_dPoP)
-            ll.set_data(envelop_phi, 100.0*envelop_dPoP)
-            ax.set_title('$%3.0f$ turns; capture rate: $%3.1f$%%' %(i, eff), fontsize=20)
+            ax.set_title('$%3.3f$ ms' %(time*1000), fontsize=28)
             writer.grab_frame()
         elif (1000<i<=2000 and i%10==0):
             l.set_data(show_phi, 100.0*show_dPoP)
-            ll.set_data(envelop_phi, 100.0*envelop_dPoP)
-            ax.set_title('$%3.0f$ turns; capture rate: $%3.1f$%%' %(i, eff), fontsize=20)
+            ax.set_title('$%3.3f$ ms' %(time*1000), fontsize=28)
             writer.grab_frame()        
-        elif (i>2000 and i%200==0):
+        elif (i>2000 and i%400==0):
             l.set_data(show_phi, 100.0*show_dPoP)
-            ll.set_data(envelop_phi, 100.0*envelop_dPoP)
-            ax.set_title('$%3.0f$ turns; capture rate: $%3.1f$%%' %(i, eff), fontsize=20)
+            ax.set_title('$%3.3f$ ms' %(time*1000), fontsize=28)
             writer.grab_frame()
-
-#print show_turn, show_eff
-#np.savetxt('eff.dat', (show_turn, show_eff), fmt='%2.2f')
 
