@@ -123,7 +123,7 @@ Full documentation (theory, optimization results, code reference) is available
 as a Sphinx project under the `docs/` directory. To build it:
 
 ```bash
-uv pip install sphinx
+uv pip install -r docs/requirements.txt
 cd docs
 make html
 ```

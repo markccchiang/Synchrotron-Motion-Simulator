@@ -1,0 +1,3 @@
+# Documentation build dependencies (not needed to run the simulation).
+#   uv pip install -r docs/requirements.txt
+sphinx>=9.0
