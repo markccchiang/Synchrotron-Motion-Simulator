@@ -11,7 +11,6 @@ JavaScript, so there is one source of truth for the simulation.
 import argparse
 import json
 import os
-import sys
 import threading
 import traceback
 import webbrowser
@@ -54,27 +53,56 @@ SPECIES = {
 }
 
 
+def configured_species():
+    # Input.py comments out one species' ranges and leaves the other's active.
+    # A negative lower phi limit is the proton convention ([-pi, pi]); the
+    # electron one starts at 0.
+    return 'proton' if para.range_phi1 < 0 else 'electron'
+
+
+def species_source(species):
+    """Parameter set for `species`, and where it came from.
+
+    Input.py only ever holds one species' survival window and plot limits --
+    the other species' lines are commented out. So when the requested species
+    is not the one Input.py is set up for, read the matching example file
+    instead. Using Input.py regardless would judge, say, a proton bunch on
+    [-pi, pi] against an electron window of [0, 2pi] and call half of it lost
+    before a single turn.
+    """
+    if species == configured_species():
+        return 'src/Input.py', vars(para)
+    name = 'Input.py.example-' + species
+    path = os.path.join(HERE, os.pardir, 'src', name)
+    ns = {}
+    with open(path) as fh:
+        exec(compile(fh.read(), path, 'exec'), ns) # a config file, not input
+    return 'src/' + name, ns
+
+
 def defaults(species):
-    # Starting point for the sliders: whatever src/Input.py currently holds.
-    cfg = func.snapshot()
+    # Starting point for the sliders, from a parameter set coherent with the
+    # requested species.
+    source, ns = species_source(species)
     return {
         'species': species,
         'axis': SPECIES[species]['axis'],
-        'config': cfg,
+        'source': source,
+        'config': {name: ns[name] for name in func.CONFIG_NAMES},
         'bunch': {
-            'num_of_particles': para.num_of_particles,
-            'sigma_dPoP': para.sigma_dPoP,
-            'mean_dPoP': para.mean_dPoP,
-            'num_of_turns': para.app5_num_of_turns,
+            'num_of_particles': ns['num_of_particles'],
+            'sigma_dPoP': ns['sigma_dPoP'],
+            'mean_dPoP': ns['mean_dPoP'],
+            'num_of_turns': ns['app5_num_of_turns'],
         },
         'window': {
-            'range_dPoP': para.range_dPoP,
-            'range_phi1': para.range_phi1,
-            'range_phi2': para.range_phi2,
+            'range_dPoP': ns['range_dPoP'],
+            'range_phi1': ns['range_phi1'],
+            'range_phi2': ns['range_phi2'],
         },
         'limits': {
-            'xlim': [para.set_xlim1, para.set_xlim2],
-            'ylim': [para.set_ylim1, para.set_ylim2],
+            'xlim': [ns['set_xlim1'], ns['set_xlim2']],
+            'ylim': [ns['set_ylim1'], ns['set_ylim2']],
         },
     }
 
@@ -185,9 +213,8 @@ def main():
     ap.add_argument('--no-browser', action='store_true')
     args = ap.parse_args()
 
-    # Input.py comments its ranges per species; a negative lower phi limit is
-    # the proton convention ([-pi, pi]) and 0 the electron one ([0, 2*pi]).
-    species = args.species or ('proton' if para.range_phi1 < 0 else 'electron')
+    species = args.species or configured_species()
+    source, _ = species_source(species)
 
     # Single-threaded on purpose: requests serialise, so the module-level config
     # that override() mutates cannot be raced between two simulations.
@@ -195,9 +222,16 @@ def main():
     server.species = species
     url = 'http://127.0.0.1:%d/' % args.port
 
-    print('Synchrotron capture-optimisation UI')
-    print('  species : %s (from src/Input.py)' % species)
-    print('  serving : %s' % url)
+    # flush: stdout is block-buffered when redirected, and this process then
+    # blocks in serve_forever, so an unflushed banner never reaches a pipe
+    print('Synchrotron capture-optimisation UI', flush=True)
+    print('  species : %s' % species, flush=True)
+    print('  params  : %s' % source)
+    if source != 'src/Input.py':
+        print('            (src/Input.py is set up for %s, so the %s ranges and'
+              % (configured_species(), species), flush=True)
+        print('             plot limits come from the example file instead)', flush=True)
+    print('  serving : %s' % url, flush=True)
     print('  stop    : Ctrl-C')
     if not args.no_browser:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
