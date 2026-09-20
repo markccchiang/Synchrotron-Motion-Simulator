@@ -179,7 +179,7 @@ Python 3.12.12 with NumPy 2.5.3 and Matplotlib 3.11.2. All ten scripts complete:
 |---|---|
 | Ramping cycle | 208151 turns, 0.0500 s — exactly the half-period of the 10 Hz ramp |
 | Capture efficiency | 99.9%, consistent across all three multi-particle scripts |
-| Figures | 9 `.eps` files, matching the committed set in `TLS-booster-figure/` |
+| Figures | 9 `.eps` files, matching the committed set in `notes/TLS-booster-figure/` |
 | Animations | 4 `.mp4` files, valid H.264, frame counts matching the configured turns |
 
 ### Known limitations

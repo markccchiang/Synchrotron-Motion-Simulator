@@ -6,7 +6,7 @@ __pycache__/
 *.pyc
 
 # simulation output written to the working directory (root only;
-# the committed reference sets under TLS-booster-*/ stay tracked)
+# the committed reference sets under notes/TLS-booster-*/ stay tracked)
 /*.eps
 /*.mp4
 /*.dat
