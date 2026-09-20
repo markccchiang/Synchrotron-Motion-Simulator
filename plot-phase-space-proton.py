@@ -17,12 +17,12 @@ range_phi2 = para.range_phi2 # define the upper limit of survival range phi (rad
 ###########################################################################################
 
 var_t_tmp = 0.0 # set initial ramping time = 0 (s)
-var_t = np.zeros(num_of_particles) # start ramping from t=0 (sec) 
-var_E = func.E_total_p(var_t_tmp)*np.ones(num_of_particles)
+var_t = var_t_tmp # every particle shares one machine clock
+var_E = func.E_total_p(var_t_tmp)
 
 var_E_tmp = func.E_total_p(var_t_tmp)
 var_beta2_tmp = func.beta2_p(var_E_tmp)
-var_beta2 = func.beta2_p(var_E_tmp)*np.ones(num_of_particles)
+var_beta2 = func.beta2_p(var_E_tmp)
 
 # assume the dE distribution is the gaussian with the mean and sigma
 np.random.seed(12345)
@@ -47,18 +47,18 @@ for i in range(num_of_turns):
     for j in range(num_of_particles):
 
         show_phi[j] = var_phi[j]
-        show_dPoP[j] = var_dE[j]/var_E[j]/var_beta2[j]
+        show_dPoP[j] = var_dE[j]/var_E/var_beta2
 
-        var_dE[j], var_phi[j] = func.iteration_p(var_dE[j], var_phi[j], var_t[j], var_E[j])
-
-        var_t[j] = func.t_p_new(var_t[j], var_E[j])
-        time_tmp = var_t[j]
-
-        var_E[j] = func.E_total_p(var_t[j])
-        var_beta2[j] = func.beta2_p(var_E[j])
+        var_dE[j], var_phi[j] = func.iteration_p(var_dE[j], var_phi[j], var_t, var_E)
 
         if (range_phi1<=show_phi[j]<=range_phi2 and abs(show_dPoP[j])<=range_dPoP):
             count +=1
+
+    # t, E and beta^2 are the same for every particle, so advance them once
+    var_t = func.t_p_new(var_t, var_E)
+    time_tmp = var_t
+    var_E = func.E_total_p(var_t)
+    var_beta2 = func.beta2_p(var_E)
 
     eff = 100.0*count/num_of_particles
     time = time_tmp
