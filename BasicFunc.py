@@ -154,7 +154,14 @@ def phis_p(t, E):
     # the synchronous particle must supply the ramp gain AND the energy it
     # radiates each turn; U0 is in joules, gain and V_RF are in eV/volts
     for_angle_p = (gain + U0_p(E)/e_charge)/V_RF(t)
-    for_angle_p = max(-0.9999, min(0.9999, for_angle_p))
+    if (abs(for_angle_p) > 1.0):
+        # no phase satisfies the energy balance, so there is no synchronous
+        # particle and no bucket. Clamping here would report phi_s ~ 90 deg
+        # and let the run continue producing plausible-looking nonsense.
+        raise ValueError(
+            'phis_p: no synchronous phase at t=%s s -- the ramp demands %s eV '
+            'per turn but V_RF is only %s V. Raise V_max or lower the ramping '
+            'rate in Input.py.' % (t, gain + U0_p(E)/e_charge, V_RF(t)))
     return asin(for_angle_p) # (rad)
 
 def phis_e(t, E):
@@ -167,7 +174,12 @@ def phis_e(t, E):
     # the synchronous particle must supply the ramp gain AND the energy it
     # radiates each turn; U0 is in joules, gain and V_RF are in eV/volts
     for_angle_e = (gain + U0_e(E)/e_charge)/V_RF(t)
-    for_angle_e = max(-0.9999, min(0.9999, for_angle_e))
+    if (abs(for_angle_e) > 1.0):
+        # see phis_p: no bucket exists, so say so rather than clamp
+        raise ValueError(
+            'phis_e: no synchronous phase at t=%s s -- the ramp demands %s eV '
+            'per turn but V_RF is only %s V. Raise V_max or lower the ramping '
+            'rate in Input.py.' % (t, gain + U0_e(E)/e_charge, V_RF(t)))
     return asin(for_angle_e) # (rad)
 
 def Q_s_p(E, V, t):

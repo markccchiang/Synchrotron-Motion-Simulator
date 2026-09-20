@@ -16,7 +16,6 @@ var_dE = default_var_dE # need to varify in "while" loop
 
 var_t = 0.0 # set initial ramping time = 0 (s)  
 var_E = func.E_total_e(var_t)
-var_beta2 = func.beta2_e(var_E)
 
 show_dPoP = 9999.0*np.ones(num_of_turns)
 show_phi = 9999.0*np.ones(num_of_turns)
@@ -38,7 +37,6 @@ while (abs(show_phi[num_of_turns-1])>default_var_phi):
         show_dPoP[i] = var_dE/var_E
         var_t = func.t_e_new(var_t, var_E)
         var_E = func.E_total_e(var_t)
-        var_beta2 = func.beta2_e(var_E)
     search_step += 1
     var_phi = default_var_phi - Delta_rad*search_step 
     var_dE = 0.0    

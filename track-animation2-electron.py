@@ -23,8 +23,6 @@ var_t = var_t_tmp # every particle shares one machine clock
 var_E = func.E_total_e(var_t_tmp)
 
 var_E_tmp = func.E_total_e(var_t_tmp)
-var_beta2_tmp = func.beta2_e(var_E_tmp)
-var_beta2 = func.beta2_e(var_E_tmp)
 
 # assume the dE distribution is the gaussian with the mean and sigma
 np.random.seed(12345)
@@ -63,8 +61,6 @@ ax = plt.axes()
 #
 # make the animation
 #
-show_eff = 9999.0*np.ones(num_of_turns)
-show_turn = 9999*np.ones(num_of_turns)
 resolution = 100
 with writer.saving(fig, "track-animation2-electron.mp4", resolution):
     for i in range(num_of_turns):
@@ -85,7 +81,6 @@ with writer.saving(fig, "track-animation2-electron.mp4", resolution):
         var_t = func.t_e_new(var_t, var_E)
         time_tmp = var_t
         var_E = func.E_total_e(var_t)
-        var_beta2 = func.beta2_e(var_E)
 
         eff = 100.0*count/num_of_particles
         time = time_tmp

@@ -17,10 +17,14 @@ show_phis = np.ones(MAX_element)
 show_Q_s = np.ones(MAX_element)
 show_alpha = np.ones(MAX_element)
 show_area = np.ones(MAX_element)
-show_beta2 = np.ones(MAX_element)
 show_v = np.ones(MAX_element)
 
 while (var_KE<=(func.E_max-0.001)):
+
+    if (var_turn >= MAX_element):
+        raise RuntimeError(
+            'plot-electron: the ramp needs more than %s turns; raise MAX_element.'
+            % MAX_element)
 
     var_E = func.E_total_e(var_t)
     var_V = func.V_RF(var_t)
@@ -29,7 +33,6 @@ while (var_KE<=(func.E_max-0.001)):
     var_Q_s = func.Q_s_e(var_E, var_V, var_t)
     var_alpha = func.alpha_ad_e(var_E, var_V, var_t)
     var_area = func.area_e(var_E, var_V, var_t)
-    var_beta2 = func.beta2_e(var_E)
     var_v = func.v_e(var_E)
 
     show_t[var_turn] = var_t

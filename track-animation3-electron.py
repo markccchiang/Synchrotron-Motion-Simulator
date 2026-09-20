@@ -23,8 +23,6 @@ var_t = var_t_tmp # every particle shares one machine clock
 var_E = func.E_total_e(var_t_tmp)
 
 var_E_tmp = func.E_total_e(var_t_tmp)
-var_beta2_tmp = func.beta2_e(var_E_tmp)
-var_beta2 = func.beta2_e(var_E_tmp)
 
 # assume the dE distribution is the gaussian with the mean and sigma
 np.random.seed(12345)
@@ -92,7 +90,6 @@ with writer.saving(fig, "track-animation3-electron.mp4", resolution):
         var_t = func.t_e_new(var_t, var_E)
         time_tmp = var_t
         var_E = func.E_total_e(var_t)
-        var_beta2 = func.beta2_e(var_E)
 
         time = time_tmp
         envelop_phi, envelop_dPoP = func.envelope_e(time, para.app2_num_of_turns)

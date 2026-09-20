@@ -65,8 +65,6 @@ ax = plt.axes()
 #
 # make the animation
 #
-show_eff = 9999.0*np.ones(num_of_turns)
-show_turn = 9999*np.ones(num_of_turns)
 resolution = 100
 with writer.saving(fig, "track-animation2-proton.mp4", resolution):
     for i in range(num_of_turns):
