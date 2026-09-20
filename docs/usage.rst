@@ -217,8 +217,9 @@ Interactive UI
    .venv/bin/python examples/ui.py --species proton --port 8080 --no-browser
 
 Dragging the RF voltages, capture time, harmonic number or bunch spread updates the
-phase-space plot and the capture rate live. The species defaults to whichever one
-``src/Input.py`` is configured for.
+phase-space plot and the capture rate live. The Electron/Proton toggle at the top of
+the panel switches species; each brings its own survival window, plot limits and phase
+convention. The species the page opens with follows ``src/Input.py``, or ``--species``.
 
 All physics runs in ``BasicFunc``; the page only draws. The UI uses the vectorised
 ``iteration_e_vec`` / ``iteration_p_vec`` map, which reproduces the scalar map

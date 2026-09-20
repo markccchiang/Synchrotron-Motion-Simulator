@@ -134,8 +134,9 @@ For exploring capture efficiency, `examples/ui.py` serves a browser UI on localh
 ```
 
 Drag the RF voltages, capture time, harmonic number or bunch spread and the phase-space
-plot and capture rate update live. The species defaults to whichever one `src/Input.py`
-is configured for.
+plot and capture rate update live. Switch between **electron** and **proton** with the
+toggle at the top of the panel; each species brings its own survival window, plot limits
+and phase convention. The species it opens with follows `src/Input.py`, or `--species`.
 
 All physics runs in `BasicFunc` on the Python side — the page only draws — so the UI and
 the batch scripts cannot drift apart. It uses the vectorised `iteration_*_vec` map, which

@@ -58,6 +58,15 @@
     color: var(--bad); font-size: 12.5px;
   }
   #busy { color: var(--muted); font-size: 12px; min-height: 18px; margin-top: 6px; }
+  .seg { display: flex; gap: 0; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    flex: 1; border: 0; border-radius: 0; padding: 8px 6px; font-size: 13px;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+  .seg button:hover:not([aria-pressed="true"]) { color: var(--accent); }
+  .src { font-size: 11px; color: var(--muted); margin: -8px 0 12px; }
 </style>
 </head>
 <body>
@@ -68,6 +77,11 @@
 
 <main>
   <div class="card" id="panel">
+    <div class="seg" role="group" aria-label="Simulation particle">
+      <button id="sp_electron" aria-pressed="false">Electron</button>
+      <button id="sp_proton" aria-pressed="false">Proton</button>
+    </div>
+    <div class="src" id="src"></div>
     <div class="ctl">
       <label>Initial RF voltage <i>V<sub>i</sub></i> <b><span id="v_min_v"></span> kV</b></label>
       <input type="range" id="V_min" min="1000" max="30000" step="100">
@@ -97,7 +111,7 @@
       <input type="range" id="num_of_turns" min="0" max="6000" step="50">
     </div>
     <div class="row">
-      <button id="reset">Reset to Input.py</button>
+      <button id="reset">Reset</button>
       <button id="play">Play</button>
     </div>
     <div id="busy"></div>
@@ -265,8 +279,14 @@ function togglePlay() {
   }, 260);
 }
 
-async function boot() {
-  D = await (await fetch("/api/defaults")).json();
+// Switching species reloads the whole parameter set, not just the physics:
+// the survival window, plot limits and phase convention all differ, so the
+// server hands back a set coherent with the species it was asked for.
+async function load(species) {
+  if (playing) togglePlay();
+  const q = species ? "?species=" + encodeURIComponent(species) : "";
+  D = await (await fetch("/api/defaults" + q)).json();
+  if (D.error) { showError(D.error); return; }
   $("V_min").value = D.config.V_min;
   $("V_max").value = D.config.V_max;
   $("T_nu").value  = D.config.T_nu * 1000;
@@ -274,17 +294,29 @@ async function boot() {
   $("sigma_dPoP").value = D.bunch.sigma_dPoP * 100;
   $("num_of_particles").value = D.bunch.num_of_particles;
   $("num_of_turns").value = D.bunch.num_of_turns;
+  $("sp_electron").setAttribute("aria-pressed", String(D.species === "electron"));
+  $("sp_proton").setAttribute("aria-pressed", String(D.species === "proton"));
+  $("src").textContent = "parameters from " + D.source;
   document.title = "Synchrotron Capture — " + D.species;
+  hideError();
   readout();
+  run(3000);
+}
+
+function init() {
+  // bound once: re-binding on every reset would stack duplicate handlers and
+  // fire a request per accumulated listener on each slider move
   CONTROLS.forEach((id) => {
     $(id).addEventListener("input", onInput);
     $(id).addEventListener("change", onCommit);
   });
   $("play").addEventListener("click", togglePlay);
-  $("reset").addEventListener("click", () => { boot(); });
-  run(3000);
+  $("reset").addEventListener("click", () => load(D && D.species));
+  $("sp_electron").addEventListener("click", () => load("electron"));
+  $("sp_proton").addEventListener("click", () => load("proton"));
+  load(null);
 }
-boot();
+init();
 </script>
 </body>
 </html>

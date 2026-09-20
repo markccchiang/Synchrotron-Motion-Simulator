@@ -15,6 +15,7 @@ import threading
 import traceback
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 import numpy as np
 
@@ -170,9 +171,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path in ('/', '/index.html'):
             with open(os.path.join(HERE, 'ui.html'), 'rb') as fh:
                 self._send(200, fh.read(), 'text/html; charset=utf-8')
-        elif self.path.startswith('/api/defaults'):
-            species = 'proton' if 'proton' in self.path else self.server.species
-            self._send(200, defaults(species))
+        elif urlparse(self.path).path == '/api/defaults':
+            asked = parse_qs(urlparse(self.path).query).get('species', [None])[0]
+            if asked is not None and asked not in SPECIES:
+                self._send(400, {'error': 'unknown species %r; expected %s'
+                                 % (asked, ' or '.join(sorted(SPECIES)))})
+                return
+            self._send(200, defaults(asked or self.server.species))
         else:
             self._send(404, {'error': 'not found'})
 
@@ -209,7 +214,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--port', type=int, default=8000)
     ap.add_argument('--species', choices=sorted(SPECIES), default=None,
-                    help='default species (guessed from src/Input.py if omitted)')
+                    help='species to open with; switchable in the page '
+                         '(guessed from src/Input.py if omitted)')
     ap.add_argument('--no-browser', action='store_true')
     args = ap.parse_args()
 
