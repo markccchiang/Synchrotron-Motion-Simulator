@@ -3,7 +3,7 @@
 project = 'Synchrotron Motion Simulator'
 copyright = '2014, Cheng-Chin Chiang'
 author = 'Cheng-Chin Chiang'
-release = '1.0'
+release = '0.1'
 
 extensions = [
     'sphinx.ext.mathjax',
